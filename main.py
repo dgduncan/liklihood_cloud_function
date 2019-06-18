@@ -2,6 +2,7 @@ import sys
 import itertools
 import math
 import numpy
+import flask
 
 # [START functions_helloworld_http]
 # [START functions_http_content]
@@ -13,21 +14,31 @@ from flask import escape
 
 # [START functions_tips_terminate]
 # [START functions_helloworld_get]
-def hello_get(request):
-    """HTTP Cloud Function.
-    Args:
-        request (flask.Request): The request object.
-        <http://flask.pocoo.org/docs/1.0/api/#flask.Request>
-    Returns:
-        The response text, or any set of values that can be turned into a
-        Response object using `make_response`
-        <http://flask.pocoo.org/docs/1.0/api/#flask.Flask.make_response>.
-    """
+def hello(request):
+    if request.method == 'OPTIONS':
+        # Allows GET requests from origin https://mydomain.com with
+        # Authorization header
+        headers = {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, POST',
+            'Access-Control-Allow-Headers': 'content-type',
+            'Access-Control-Max-Age': '3600'
+            # 'Access-Control-Max-Age': '3600',
+            # 'Access-Control-Allow-Credentials': 'true'
+        }
+        return ('', 204, headers)
     print(request.get_json())
     requestBodyJson = request.get_json()
     # liklihood(["1","2","3", "4"], [.1,.2,.3,.4], [1], [2], ["3"], ["1","2","3", "4"])
-    liklihood(requestBodyJson["alleles_vector"], requestBodyJson["population_probability"], requestBodyJson["prosecution_unknowncontributors"], requestBodyJson["defense_unknowncontributors"], requestBodyJson["prosecution_unknownalleles"], requestBodyJson["defense_unknownalleles"])
-    return 'Hello World!'
+    
+    # Set CORS headers for the main request
+    headers = {
+        'Access-Control-Allow-Origin': '*',
+    }
+    value = liklihood(requestBodyJson["alleles_vector"], requestBodyJson["population_probability"], requestBodyJson["prosecution_unknowncontributors"], requestBodyJson["defense_unknowncontributors"], requestBodyJson["prosecution_unknownalleles"], requestBodyJson["defense_unknownalleles"])
+    print(value)
+    return (str(value), 200, headers)
+    # return ('Hello World!', 200, headers)
 # [END functions_helloworld_get]
 
 
@@ -184,7 +195,7 @@ def liklihood (alleles, prob, x1, x2, u1, u2):
     p1 = p_evid(p = prob, x = x1, ind = ind1, g = G)
     p2 = p_evid(p = prob, x = x2, ind = ind2, g = G)
     LR = p1 / p2
-    print(LR)
+    return LR
 
 
 def p_evid (p, x, ind, g):
@@ -231,4 +242,4 @@ def p_evid (p, x, ind, g):
     
 
 # liklihood(["1","2","3"], [.1,.2,.3], [0], [1], [], ["1"])
-liklihood(["1","2","3", "4"], [.1,.2,.3,.4], [1], [2], ["3"], ["1","2","3", "4"])
+# liklihood(["1","2","3", "4"], [.1,.2,.3,.4], [1], [2], ["3"], ["1","2","3", "4"])
